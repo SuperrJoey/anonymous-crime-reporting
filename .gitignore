@@ -41,3 +41,6 @@ Thumbs.db
 *.js
 *.js.map
 *.d.ts
+
+
+serviceAccountKey.json
