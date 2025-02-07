@@ -1,5 +1,7 @@
 import mongoose, {Schema, Document} from "mongoose";
 
+mongoose.connect("mongodb://localhost:27017/ShadowReport")
+
 const USER = "user";
 const LAW_ENFORCEMENT = "law_enforcement"
 

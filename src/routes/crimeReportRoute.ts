@@ -2,8 +2,11 @@ import express from "express";
 import upload from "../middleware/upload";
 import cloudinary from "../config/cloudinary";
 import CrimeReport from "../models/CrimeReport";
+import fs from "fs";
+import util from "util";
 
 const router = express.Router();
+const unlinkFile = util.promisify(fs.unlink);
 
 router.post("/report/upload", upload.array("evidence", 5), async(req, res) => {
     try {
@@ -12,19 +15,22 @@ router.post("/report/upload", upload.array("evidence", 5), async(req, res) => {
 
         let evidenceUrls: string[] = [];
 
-        for(const file of files) {
-            const result = await cloudinary.uploader.upload_stream(
-                { folder: "evidence" },
-                (error, result) => {
-                    if (error) {
-                        console.error("Cloudinary upload error:", error);
-                        res.status(500).json({ error: "Upload failed" });
-                        return;
+        const uploadToCloudinary = (filePath: string) => {
+            return new Promise<string>((resolve, reject) => {
+                cloudinary.uploader.upload(filePath, {folder: "evidence"}, (error, result) => {
+                    if(error || !result) {
+                        reject(error || new Error("upload failed"));
+                    } else {
+                        resolve(result.secure_url);
                     }
-                    if(result) evidenceUrls.push(result.secure_url);
-                }
-            );
-            result.end(file.buffer);
+                })
+            })
+        }
+
+        for(const file of files) {
+           const url = await uploadToCloudinary(file.path);
+           evidenceUrls.push(url);
+           await unlinkFile(file.path);
         }
 
         const updatedReport = await CrimeReport.findOneAndUpdate(
