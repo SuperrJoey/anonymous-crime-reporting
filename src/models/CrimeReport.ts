@@ -1,4 +1,5 @@
 import mongoose, {Schema, Document} from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 mongoose.connect("mongodb://localhost:27017/ShadowReport")
 
@@ -23,7 +24,7 @@ export interface CrimeReport extends Document {
 }
 
 const CrimeReportSchema = new Schema<CrimeReport>({
-    reportId: {type: String, unique: true, required: true},
+    reportId: {type: String, unique: true, default: uuidv4},
     description: { type: String, required: true },
     location: { type: String, required: true },
     status: { type: String, enum: ["Pending", "Under Investigation", "Closed"], default: "Pending" },
